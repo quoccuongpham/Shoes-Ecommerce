@@ -1,0 +1,93 @@
+<script setup>
+  import { reactive } from 'vue';
+  import axios from "axios";
+  import router from "@/router";
+  import { notification } from 'ant-design-vue';
+  const [api, contextHolder] = notification.useNotification();
+
+  const formState = reactive({
+    SoDienThoai: '',
+    Password: '',
+  });
+  const onFinish = async values => {
+    let data = JSON.stringify({
+      "Password": formState.Password,
+      "SoDienThoai": formState.SoDienThoai
+    });
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: 'http://localhost:3000/admin/nhanvien/dangnhap',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      data : data
+    };
+
+    axios.request(config)
+        .then((response) => {
+          console.log(response.data);
+          if (response.data.success) {
+            localStorage.setItem('token', response.data.token);
+            router.push({path: '/admin/'})
+          }
+        })
+        .catch((error) => {
+          api.error({
+            message: "Đăng nhập thất bại",
+            description: "Sai số điện thoại hoặc mật khẩu",
+            placement: "topRight",
+          });
+          console.log("err")
+          console.log(error);
+        });
+  };
+  const onFinishFailed = errorInfo => {
+    console.log('Failed:', errorInfo);
+  };
+</script>
+
+<template>
+  <a-space direction="vertical" class="login-container" >
+    <a-typography-title align="center">Đăng nhập</a-typography-title>
+    <a-form
+        :model="formState"
+        name="basic"
+        :label-col="{ span: 8 }"
+        :wrapper-col="{ span: 8 }"
+        autocomplete="on"
+        @finish="onFinish"
+        @finishFailed="onFinishFailed"
+    >
+      <a-form-item
+          label="Số điện thoại"
+          name="SoDienThoai"
+          :rules="[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]"
+      >
+        <a-input v-model:value="formState.SoDienThoai" />
+      </a-form-item>
+
+      <a-form-item
+          label="Mật khẩu"
+          name="Password"
+          :rules="[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]"
+      >
+        <a-input-password v-model:value="formState.Password" />
+      </a-form-item>
+
+      <a-form-item :wrapper-col="{ offset: 8, span: 16 }">
+        <a-button type="primary" html-type="submit">Đăng nhập</a-button>
+      </a-form-item>
+    </a-form>
+    <contextHolder/>
+  </a-space>
+</template>
+
+<style scoped>
+
+  .login-container {
+    width: 100%;
+    height: 98vh;
+
+  }
+</style>
